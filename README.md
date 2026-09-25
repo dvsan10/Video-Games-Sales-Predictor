@@ -1,188 +1,213 @@
 # Video Game Sales Predictor
 
-## 📌 Project Overview
+## Overview
 
-This project uses Machine Learning to predict the **total sales of video games** based on historical information such as critic scores, console, genre, publisher, developer, and title characteristics.
+### Problem Statement
 
-The project follows an end-to-end Data Science workflow:
+Predict the **total sales of a video game** using historical game information such as critic score, console, genre, publisher, developer, and title characteristics.
 
-**Data → Data Cleaning → Missing Value Handling → Feature Engineering → Feature Selection → Model Training → Model Comparison → Model Saving → FastAPI → Docker**
+The project demonstrates an end-to-end machine learning workflow for preparing historical video game data, comparing regression models, and deploying the selected model as a REST API.
 
-The trained machine learning model is deployed as a REST API using **FastAPI** and containerized using **Docker**.
+### Project Type
 
----
+- [x] Supervised Learning - Regression
+- [ ] Supervised Learning - Classification
+- [ ] Unsupervised Learning
+- [ ] Time Series Forecasting
+- [ ] Recommendation System
 
-## 🎯 Objective
+### Objective
 
-The main objective is to predict the total sales of a video game using information available about the game.
-
-The model predicts:
-
-* **Predicted Total Sales** — Estimated total sales of the video game.
-
-This type of predictive system demonstrates how machine learning can be used to analyze historical video game data and estimate sales based on available game information.
+The primary objective is to develop a regression model that predicts the `total_sales` of a video game using relevant game information while avoiding target leakage from regional sales columns.
 
 ---
 
-## 📊 Dataset
+## Dataset Information
 
-The project uses a video game sales dataset containing information about video games, their platforms, genres, publishers, developers, critic scores, sales, and release information.
+### Dataset Source
 
-### Important Features
+The project uses the provided `vgdataset.csv` dataset.
 
-| Feature | Meaning |
-| ------ | ------- |
-| `title` | Title of the video game |
-| `console` | Gaming platform/console |
-| `genre` | Genre of the game |
-| `publisher` | Game publisher |
-| `developer` | Game developer |
-| `critic_score` | Critic rating of the game |
-| `total_sales` | Total sales of the game |
-| `release_date` | Original release date |
-| `last_update` | Last update information |
+**Dataset Source URL:** The original public dataset URL is not documented in the current project files.
 
-The dataset also contains regional sales features:
+### Dataset Description
 
-```text
-na_sales
-jp_sales
-pal_sales
-other_sales
-```
+The dataset contains historical video game information including title, console, genre, publisher, developer, critic score, regional sales, total sales, release date, and last update information.
 
-These features were not used for prediction because they are components of `total_sales` and would cause target leakage.
+Regional sales columns such as `na_sales`, `jp_sales`, `pal_sales`, and `other_sales` are components of `total_sales` and were excluded from the model predictors to prevent target leakage.
+
+### Dataset Size
+
+| Attribute | Value |
+|------------|--------|
+| Records | 64,016 |
+| Original Columns | 13 |
+| Target Variable | `total_sales` |
+| Target Type | Continuous |
+| Final Selected Features | 15 |
 
 ---
 
-## 🔎 Data Preprocessing
+## Project Workflow
 
-The following preprocessing steps were performed:
+### 1. Exploratory Data Analysis (EDA)
 
-### 1. Missing Value Handling
+Performed:
 
-Missing values were analyzed during the Exploratory Data Analysis phase.
+- Dataset Overview
+- Missing Value Analysis
+- Summary Statistics
+- Correlation Analysis
+- Feature Distribution Analysis
+- Duplicate Analysis
+- Visualizations
 
-Categorical missing values were handled using:
+The project includes more than the required 8 visualizations covering distributions, relationships, correlations, and other dataset characteristics.
+
+### Key Insights
+
+- The dataset contains substantial missing values in several sales and metadata columns.
+- `total_sales` contains a large number of missing values, so records without a target value were excluded from supervised model training.
+- Regional sales columns are components of `total_sales` and were therefore excluded from model predictors to prevent target leakage.
+- Video game sales are highly variable, with a relatively small number of games accounting for much larger sales values.
+- Publisher and developer performance can provide useful historical information for sales prediction.
+
+---
+
+### 2. Data Preprocessing
+
+Performed:
+
+- Missing Value Analysis
+- Missing Value Handling
+- Duplicate Removal
+- Outlier Analysis
+- Date Conversion
+- Categorical Encoding
+- Frequency Encoding
+- Feature Scaling
+- Chronological Train-Test Split
+
+Missing `critic_score` values were handled using the median calculated from the training data.
+
+Categorical missing values were represented as:
 
 ```text
 Unknown
 ```
 
-Missing `critic_score` values were handled using the median calculated from the training data.
-
-Historical feature missing values were replaced with:
+Historical publisher and developer features with no previous information were represented as:
 
 ```text
 0
 ```
 
-### 2. Duplicate Removal
-
-Duplicate records were identified and removed during preprocessing.
-
-### 3. Date Processing
-
-The `release_date` column was converted into datetime format.
-
-Additional date features were created:
-
-```text
-release_year
-release_month
-release_quarter
-```
-
-### 4. Title Feature Engineering
-
-Additional features were created from the game title:
-
-```text
-title_length
-title_word_count
-```
-
-### 5. Categorical Encoding
-
-The `genre` feature was encoded using:
-
-```python
-OneHotEncoder()
-```
-
-The encoder was fitted using the training data.
-
-### 6. Console Frequency Encoding
-
-The `console` feature was converted into a frequency-based numerical feature using frequencies calculated from the training data.
-
-### 7. Historical Features
-
-Historical publisher and developer features were created:
-
-```text
-publisher_avg_sales
-publisher_previous_games
-developer_avg_sales
-developer_previous_games
-```
-
-These features use historical information to represent previous publisher and developer performance.
+Outlier analysis was performed during EDA. The final modeling workflow did not apply blanket clipping to the target because extreme sales values are meaningful observations in this dataset.
 
 ---
 
-## 🤖 Machine Learning Model
+### 3. Feature Engineering & Selection
 
-Several regression approaches were evaluated during model development.
+Performed:
 
-The models evaluated were:
+- One-Hot Encoding
+- Console Frequency Encoding
+- Title Feature Creation
+- Historical Publisher Feature Creation
+- Historical Developer Feature Creation
+- SelectKBest Feature Selection
+- Standard Scaling
 
-```text
-Dummy Regressor
-Linear Regression
-Polynomial Regression
-Ridge Regression
-Lasso Regression
+### Feature Creation
+
+The following title-based features were created:
+
+- `title_length`
+- `title_word_count`
+
+Historical publisher features:
+
+- `publisher_avg_sales`
+- `publisher_previous_games`
+
+Historical developer features:
+
+- `developer_avg_sales`
+- `developer_previous_games`
+
+The `genre` feature was encoded using `OneHotEncoder`.
+
+The `console` feature was converted into a frequency-based numerical feature using frequencies calculated from the training data.
+
+### Feature Selection
+
+The top **15 features** were selected using:
+
+```python
+SelectKBest(score_func=f_regression, k=15)
 ```
 
-The models were evaluated using:
+Feature selection was fitted using the training data and then applied to the unseen test data.
 
-```text
-MAE
-MSE
-RMSE
-R² Score
-```
+### Final Features Used
 
-The final production model is:
+The final model uses the selected 15 features produced by `SelectKBest` from the following engineered feature groups:
 
-```text
-Polynomial Regression
-```
+- Critic score
+- Publisher historical features
+- Developer historical features
+- Title length
+- Title word count
+- Console frequency
+- One-hot encoded genre features
 
-with:
+---
+
+### 4. Model Building
+
+Models Implemented:
+
+1. Dummy Regressor
+2. Linear Regression
+3. Polynomial Regression
+4. Ridge Regression
+5. Lasso Regression
+
+Polynomial Regression used:
 
 ```text
 Polynomial Degree = 2
 ```
 
-The final model was selected based on its performance on the unseen test dataset.
+A chronological train-test split was used so that earlier observations were used for training and later observations were reserved for testing.
 
 ---
 
-## 📈 Model Evaluation
+### 5. Model Evaluation
 
-The models were evaluated using an unseen chronological test dataset.
+#### Evaluation Metrics
 
-### Model Comparison
+| Model | MAE | MSE | RMSE | R² Score |
+|---------|---------:|---------:|---------:|---------:|
+| Dummy Regressor | — | — | 1.0663 | -0.0058 |
+| Linear Regression | — | — | 0.9979 | 0.1191 |
+| Ridge Regression | — | — | 0.9979 | 0.1191 |
+| Lasso Regression | — | — | 1.0001 | 0.1153 |
+| Polynomial Regression | 0.3057 | 0.8743 | 0.9350 | 0.2266 |
 
-| Model | RMSE | R² Score |
-| ------ | ----: | -------: |
-| Dummy Regressor | 1.0663 | -0.0058 |
-| Linear Regression | 0.9979 | 0.1191 |
-| Ridge Regression | 0.9979 | 0.1191 |
-| Lasso Regression | 1.0001 | 0.1153 |
-| Polynomial Regression | **0.9350** | **0.2266** |
+### Best Model
+
+Selected Model:
+
+- **Polynomial Regression**
+
+Reason for Selection:
+
+- Lowest test RMSE among the evaluated models.
+- Highest test R² score among the evaluated models.
+- Lowest reported MAE among the evaluated models.
+- Lowest reported MSE among the evaluated models.
+- Captures nonlinear relationships between the selected features and total sales.
 
 ### Final Model Performance
 
@@ -193,161 +218,78 @@ RMSE = 0.9350
 R²   = 0.2266
 ```
 
-The model achieved an R² score of **0.2266**, meaning that the selected features explain approximately **22.7% of the variation** in total video game sales.
-
-Other factors not available in the dataset may also influence video game sales.
+The R² score indicates that the selected features explain approximately 22.7% of the variation in total video game sales. Other factors not available in the dataset may also influence sales.
 
 ---
 
-## 🧠 Feature Selection
+## Deployment
 
-Feature selection was performed using:
+### Framework Used
 
-```python
-SelectKBest(score_func=f_regression)
-```
+- FastAPI
+- Uvicorn
+- Docker
 
-The top features were selected using the training data.
-
-The selected feature count was:
-
-```text
-15
-```
-
-Feature selection was performed before feature scaling and model training.
-
----
-
-## 📏 Feature Scaling
-
-The selected features were standardized using:
-
-```python
-StandardScaler()
-```
-
-The scaler was fitted using the training data and then applied to the testing data.
-
-This ensures that information from the test dataset is not used during the scaling process.
-
----
-
-## ⏳ Time-Aware Train-Test Split
-
-A chronological train-test split was used for model evaluation.
-
-Earlier game records were used for training, while later records were reserved for testing.
-
-This approach helps simulate a real-world prediction scenario where historical information is used to predict future observations.
-
-Regional sales features were excluded from the predictors because they are components of the target variable `total_sales`.
-
----
-
-## 💾 Model Saving
-
-The complete model and preprocessing artifacts were saved using `joblib`.
-
-The saved model contains:
-
-```python
-{
-    "model": poly_model,
-    "poly": poly,
-    "selector": selector,
-    "scaler": scaler,
-    "genre_encoder": genre_encoder,
-    "console_frequency": console_frequency,
-    "publisher_history": publisher_history,
-    "developer_history": developer_history,
-    "critic_median": critic_median,
-    "selected_features": [...],
-    "target_transform": "log1p"
-}
-```
-
-This ensures that the same preprocessing and transformation steps used during training are applied during prediction.
-
----
-
-# 🚀 Deployment
-
-The project contains a FastAPI backend for making predictions and is containerized using Docker.
-
-## 1. FastAPI Backend
-
-FastAPI provides a REST API for making video game sales predictions.
-
-### API endpoints
+### API Endpoint
 
 #### Health Check
 
-```text
+```http
 GET /health
-```
-
-Used to verify that the API and model are loaded correctly.
-
-Example response:
-
-```json
-{
-  "status": "ok"
-}
 ```
 
 #### Prediction
 
-```text
+```http
 POST /predict
 ```
 
-Accepts video game information and returns the predicted total sales.
-
-Example input:
+### Sample Request
 
 ```json
 {
-  "title": "Grand Theft Auto V",
-  "console": "PS3",
-  "genre": "Action",
-  "publisher": "Rockstar Games",
-  "developer": "Rockstar North",
-  "critic_score": 9.7
+    "title": "Grand Theft Auto V",
+    "console": "PS3",
+    "genre": "Action",
+    "publisher": "Rockstar Games",
+    "developer": "Rockstar North",
+    "critic_score": 9.7
 }
 ```
 
-Example response:
+### Sample Response
 
 ```json
 {
-  "predicted_total_sales": 1.5427
+    "predicted_total_sales": 1.5427
 }
 ```
 
-The exact prediction depends on the trained model and the input features provided.
+The prediction value is generated by the trained Polynomial Regression model and may vary depending on the supplied input features.
 
 ---
 
-## 2. Docker Deployment
+## Docker Containerization
 
-The FastAPI application is containerized using Docker.
+### Build Docker Image
 
-The Docker container includes:
+```bash
+docker build -t video-game-sales-api .
+```
 
-* FastAPI application
-* Trained machine learning model
-* Required Python dependencies
-* Uvicorn server
+### Run Docker Container
 
-The API can be accessed through:
+```bash
+docker run -p 8000:8000 video-game-sales-api
+```
+
+The API is then available at:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-FastAPI documentation:
+FastAPI Swagger documentation:
 
 ```text
 http://127.0.0.1:8000/docs
@@ -355,60 +297,62 @@ http://127.0.0.1:8000/docs
 
 ---
 
-# 🏗️ Project Architecture
+## Installation & Setup
+
+### Clone Repository
+
+```bash
+git clone https://github.com/dvsan10/Video-Games-Sales-Predictor.git
+cd Video-Games-Sales-Predictor
+```
+
+### Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate on Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r deployment/requirements.txt
+```
+
+### Run Application
+
+Navigate to the deployment folder:
+
+```bash
+cd deployment
+```
+
+Run FastAPI:
+
+```bash
+uvicorn app:app --reload
+```
+
+The API will run at:
 
 ```text
-                  Video Game Dataset
-                          │
-                          ▼
-                ┌──────────────────┐
-                │   Data Cleaning  │
-                │      & EDA       │
-                └────────┬─────────┘
-                         │
-                         ▼
-                ┌──────────────────┐
-                │ Feature          │
-                │ Engineering      │
-                │                  │
-                │ Title Features   │
-                │ Encoding         │
-                │ Historical Data  │
-                └────────┬─────────┘
-                         │
-                         ▼
-                ┌──────────────────┐
-                │ Feature Selection│
-                │   SelectKBest    │
-                └────────┬─────────┘
-                         │
-                         ▼
-                ┌──────────────────┐
-                │ StandardScaler   │
-                └────────┬─────────┘
-                         │
-                         ▼
-                ┌──────────────────┐
-                │ Polynomial       │
-                │ Regression       │
-                └────────┬─────────┘
-                         │
-                         ▼
-                  Predicted Sales
-                         │
-                         ▼
-                ┌──────────────────┐
-                │     FastAPI      │
-                │     Backend      │
-                └────────┬─────────┘
-                         │
-                         ▼
-                       Docker
+http://127.0.0.1:8000
+```
+
+Swagger documentation:
+
+```text
+http://127.0.0.1:8000/docs
 ```
 
 ---
 
-# 📁 Project Structure
+## Project Structure
 
 ```text
 Video-Games-Sales-Predictor/
@@ -439,124 +383,20 @@ Video-Games-Sales-Predictor/
 ### File Description
 
 | File | Description |
-| ---- | ----------- |
-| `vgdataset.csv` | Video game sales dataset used for analysis and model development |
-| `Video Games Sales.ipynb` | Complete data analysis, preprocessing, feature engineering, model training, and evaluation |
+|------|-------------|
+| `vgdataset.csv` | Video game sales dataset |
+| `Video Games Sales.ipynb` | EDA, preprocessing, feature engineering, model training, and evaluation |
 | `app.py` | FastAPI backend and prediction API |
-| `video_game_sales_model.joblib` | Trained Polynomial Regression model and preprocessing artifacts |
+| `video_game_sales_model.joblib` | Saved Polynomial Regression model and preprocessing artifacts |
 | `requirements.txt` | Python dependencies |
-| `Dockerfile` | Docker configuration for the FastAPI application |
+| `Dockerfile` | Docker configuration for deployment |
 | `README.md` | Project documentation |
 | `.gitignore` | Files excluded from Git |
-| `screenshots/` | Screenshots showing the API and Docker deployment results |
+| `screenshots/` | Deployment and API screenshots |
 
 ---
 
-# ⚙️ Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/dvsan10/Video-Games-Sales-Predictor.git
-```
-
-Navigate into the project:
-
-```bash
-cd Video-Games-Sales-Predictor
-```
-
-Create a virtual environment:
-
-```bash
-python -m venv venv
-```
-
-Activate the environment on Windows:
-
-```bash
-venv\Scriptsctivate
-```
-
-Install dependencies:
-
-```bash
-pip install -r deployment/requirements.txt
-```
-
----
-
-# ▶️ Run the Application
-
-## Start FastAPI
-
-Navigate to the deployment folder:
-
-```bash
-cd deployment
-```
-
-Run FastAPI:
-
-```bash
-uvicorn app:app --reload
-```
-
-The API will run at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Health check:
-
-```text
-http://127.0.0.1:8000/health
-```
-
-FastAPI documentation:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
----
-
-## Run Using Docker
-
-Navigate to the deployment folder:
-
-```bash
-cd deployment
-```
-
-Build the Docker image:
-
-```bash
-docker build -t video-game-sales-api .
-```
-
-Run the Docker container:
-
-```bash
-docker run -p 8000:8000 video-game-sales-api
-```
-
-The application will be available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-FastAPI documentation:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
----
-
-# 🧪 Prediction Workflow
+## Prediction Workflow
 
 The prediction workflow is:
 
@@ -586,27 +426,27 @@ Predicted Total Sales
 
 ---
 
-# 📸 Screenshots
+## Screenshots
 
-## Docker Build
+### Docker Build
 
 ![Docker Build](screenshots/01_Docker_Build.png)
 
-## API Health Check
+### API Health Check
 
 ![API Health](screenshots/02_API_Health.png)
 
-## API Prediction
+### API Prediction
 
 ![API Prediction](screenshots/03_API_Prediction.png)
 
-## API Prediction Result
+### API Prediction Result
 
 ![API Prediction Result](screenshots/04_API_Prediction_Result.png)
 
 ---
 
-# 🛠️ Technologies Used
+## Technologies Used
 
 * Python
 * Pandas
@@ -624,7 +464,21 @@ Predicted Total Sales
 
 ---
 
-# 💡 Key Learning Outcomes
+## Results
+
+- Developed an end-to-end video game sales prediction system.
+- Performed EDA, preprocessing, feature engineering, feature selection, and model comparison.
+- Evaluated Linear, Polynomial, Ridge, and Lasso Regression models along with a Dummy Regressor baseline.
+- Polynomial Regression achieved a test RMSE of **0.9350** and R² of **0.2266**.
+- Saved the trained model and preprocessing artifacts using `joblib`.
+- Successfully integrated the model with FastAPI.
+- Successfully containerized the FastAPI application using Docker.
+- Successfully tested the `/health` and `/predict` endpoints through FastAPI Swagger.
+- The `/predict` endpoint returned a **200 OK** response during deployment testing.
+
+---
+
+## Key Learning Outcomes
 
 Through this project, I worked on:
 
@@ -636,8 +490,7 @@ Through this project, I worked on:
 * Categorical encoding
 * Frequency encoding
 * Historical feature engineering
-* Feature selection
-* SelectKBest
+* Feature selection using SelectKBest
 * Feature scaling
 * Chronological train-test splitting
 * Regression algorithms
@@ -656,19 +509,27 @@ Through this project, I worked on:
 
 ---
 
-# 🔮 Future Improvements
+## Future Improvements
 
-Possible future improvements include:
+- Improve model performance using additional relevant features.
+- Include additional game metadata such as marketing and budget information.
+- Add franchise-level information when available.
+- Incorporate user ratings and review data.
+- Experiment with additional regression algorithms.
+- Perform additional hyperparameter tuning.
+- Improve historical feature engineering.
+- Add automated API testing.
+- Deploy the FastAPI backend to a cloud platform.
+- Create an interactive frontend for predictions.
+- Add model monitoring.
+- Implement CI/CD.
 
-* Adding more detailed game metadata
-* Including marketing and budget information
-* Adding franchise-level information when available
-* Incorporating user ratings and review data
-* Experimenting with additional regression algorithms
-* Performing additional hyperparameter tuning
-* Improving historical feature engineering
-* Adding automated testing
-* Deploying the FastAPI backend to a cloud platform
-* Creating an interactive frontend for predictions
-* Adding model monitoring
-* Implementing CI/CD
+---
+
+## Author
+
+**Student Name:** DHARUN VIKASH. R
+
+**Batch:** DS-ANB-03
+
+**Submission Date:** 26-09-2026
